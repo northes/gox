@@ -1,4 +1,4 @@
-module ntool
+module github.com/northes/ntool
 
 go 1.16
 
