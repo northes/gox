@@ -33,7 +33,7 @@ func TestGET(t *testing.T) {
 	Convey("GET", t, func() {
 		url := "https://apihut.net/ip"
 		resp := new(Demo)
-		fmt.Println(GET(url).Unmarshal(resp).Error)
+		fmt.Println(GET(url).Do().Unmarshal(resp).Error)
 		fmt.Printf("%+v", resp)
 		So(resp.Code, ShouldNotBeNil)
 	})
@@ -41,13 +41,17 @@ func TestGET(t *testing.T) {
 
 func TestPOST(t *testing.T) {
 	Convey("POST", t, func() {
-		url := "http://192.168.2.41:8200/api/fashion/login/pwd"
+		url := "http://192.168.2.41:8200/api/login/pwd"
 		body := &Login{
 			Type:     1,
-			Account:  "13725915998",
+			Account:  "12345678910",
 			Password: "123456Abcd",
 		}
-		fmt.Println(POSTWithMarshal(url, body).Body())
-		So(POSTWithMarshal(url, body).Body(), ShouldNotBeNil)
+		re := POST(url).MarshalBody(body).Do()
+		defer re.Close()
+		if re.Error != nil {
+			fmt.Println(re.Error)
+		}
+		So(re.Error, ShouldNotBeNil)
 	})
 }
