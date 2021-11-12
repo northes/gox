@@ -51,77 +51,86 @@ func NewContext(method string, url string) *Context {
 	}
 }
 
-func (h *Context) SetHead(heads map[string]string) *Context {
-	h.Head = heads
-	return h
+func (c *Context) SetHead(heads map[string]string) *Context {
+	c.Head = heads
+	return c
 }
 
-func (h *Context) SetBody(body []byte) *Context {
-	h.Body = body
-	return h
+func (c *Context) SetBody(body []byte) *Context {
+	c.Body = body
+	return c
 }
 
-func (h *Context) MarshalBody(body interface{}) *Context {
+func (c *Context) MarshalBody(body interface{}) *Context {
 	data, err := json.Marshal(body)
 	if err != nil {
-		h.addError(err)
-		return h
+		c.addError(err)
+		return c
 	}
-	h.Body = data
-	return h
+	c.Body = data
+	return c
 }
 
-func (h *Context) Do() *Context {
-	if len(h.Url) == 0 || len(h.Method) == 0 {
-		h.addError(errors.New("URl Or Method is not exist"))
-		return h
+func (c *Context) Do() *Context {
+	if len(c.Url) == 0 || len(c.Method) == 0 {
+		c.addError(errors.New("URl Or Method is not exist"))
+		return c
 	}
-	req, err := http.NewRequest(h.Method, h.Url, bytes.NewReader(h.Body))
+	req, err := http.NewRequest(c.Method, c.Url, bytes.NewReader(c.Body))
 	if err != nil {
-		h.addError(err)
-		return h
+		c.addError(err)
+		return c
 	}
 
-	if len(h.Head) != 0 {
-		for k, v := range h.Head {
+	if len(c.Head) != 0 {
+		for k, v := range c.Head {
 			req.Header.Add(k, v)
 		}
 	}
-	h.Request = req
+	c.Request = req
 
 	client := &http.Client{}
 	re, err := client.Do(req)
 	if err != nil {
-		h.addError(err)
-		return h
+		c.addError(err)
+		return c
 	}
 
-	h.Response = re
+	c.Response = re
 
-	return h
+	return c
 }
 
-func (h *Context) Unmarshal(model interface{}) *Context {
-	body, err := ioutil.ReadAll(h.Response.Body)
+func (c *Context) Unmarshal(model interface{}) *Context {
+	body, err := ioutil.ReadAll(c.Response.Body)
 	if err != nil {
-		h.addError(err)
-		return h
+		c.addError(err)
+		return c
 	}
 	if err = json.Unmarshal(body, model); err != nil {
-		h.addError(err)
-		return h
+		c.addError(err)
+		return c
 	}
-	return h
+	return c
 }
 
-func (h *Context) Close() error {
-	return h.Response.Body.Close()
+func (c *Context) ByteBody() ([]byte, error) {
+	body, err := ioutil.ReadAll(c.Response.Body)
+	if err != nil {
+		c.addError(err)
+		return nil, err
+	}
+	return body, nil
 }
 
-func (h *Context) addError(err error) {
-	if h.Error == nil {
-		h.Error = err
+func (c *Context) Close() error {
+	return c.Response.Body.Close()
+}
+
+func (c *Context) addError(err error) {
+	if c.Error == nil {
+		c.Error = err
 	} else if err != nil {
-		h.Error = fmt.Errorf("%v; %w", h.Error, err)
+		c.Error = fmt.Errorf("%v; %w", c.Error, err)
 	}
 }
