@@ -1,4 +1,4 @@
-package genn
+package ngen
 
 import (
 	"fmt"

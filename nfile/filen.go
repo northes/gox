@@ -1,4 +1,4 @@
-package filen
+package nfile
 
 import (
 	"archive/zip"

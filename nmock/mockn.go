@@ -1,4 +1,4 @@
-package mockn
+package nmock
 
 // 身份证
 // 生成指定大小的文件

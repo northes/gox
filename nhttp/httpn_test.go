@@ -1,4 +1,4 @@
-package httpn
+package nhttp
 
 import (
 	"fmt"
