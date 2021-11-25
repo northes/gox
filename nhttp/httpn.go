@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 )
 
 type Context struct {
@@ -133,4 +135,25 @@ func (c *Context) addError(err error) {
 	} else if err != nil {
 		c.Error = fmt.Errorf("%v; %w", c.Error, err)
 	}
+}
+
+func Download(url string, name string) error {
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	file, err := os.Create(name)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	_, err = io.Copy(file, resp.Body)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

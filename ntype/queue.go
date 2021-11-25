@@ -33,6 +33,10 @@ func (q *QueueItem) Dequeue() *Item {
 	return &item
 }
 
+func (q *QueueItem) List() []Item {
+	return q.items
+}
+
 // Front 获取第一个元素，不移除
 func (q *QueueItem) Front() *Item {
 	q.lock.RLock()
