@@ -1,12 +1,8 @@
 package ngen
 
 import (
-	"crypto/md5"
-	"encoding/hex"
 	"math/rand"
 	"time"
-
-	"github.com/bwmarrin/snowflake"
 )
 
 const (
@@ -20,6 +16,7 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
+// RandKey 根据给定的字符串，生成n长度的随机字符串
 func RandKey(n int, str string) string {
 	letter := []byte(str)
 	if n <= 0 {
@@ -35,23 +32,4 @@ func RandKey(n int, str string) string {
 		b[i] = letter[arc]
 	}
 	return string(b)
-}
-
-func Md5(str string) string {
-	h := md5.New()
-	h.Write([]byte(str))
-	return hex.EncodeToString(h.Sum(nil))
-}
-
-func CheckMd5(str string, md5 string) bool {
-	return Md5(str) == md5
-}
-
-func Snow(n int64) (snowflake.ID, error) {
-	node, err := snowflake.NewNode(n)
-	if err != nil {
-		return 0, err
-	}
-	id := node.Generate()
-	return id, nil
 }
