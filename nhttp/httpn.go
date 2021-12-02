@@ -9,87 +9,125 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"sync"
 )
 
 type Context struct {
-	Url      string
-	Method   string
-	Head     map[string]string
-	Body     []byte
-	Request  *http.Request
-	Response *http.Response
-	Error    error
+	url      string
+	method   string
+	head     map[string]string
+	body     []byte
+	request  *http.Request
+	response *http.Response
+	error    error
+	mu       *sync.Mutex
 }
 
+// GET 以GET方法初始化
 func GET(url string) *Context {
 	return NewContext(http.MethodGet, url)
 }
 
+// POST 以POST方法初始化
 func POST(url string) *Context {
 	return NewContext(http.MethodPost, url)
 }
 
+// PUT 以PUT方法初始化
 func PUT(url string) *Context {
 	return NewContext(http.MethodPut, url)
 }
 
+// PATCH 以PATCH方法初始化
 func PATCH(url string) *Context {
 	return NewContext(http.MethodPatch, url)
 }
 
+// DELETE 以DELETE方法初始化
 func DELETE(url string) *Context {
 	return NewContext(http.MethodDelete, url)
 }
 
+// NewContext 初始化
 func NewContext(method string, url string) *Context {
 	return &Context{
-		Url:      url,
-		Method:   method,
-		Head:     nil,
-		Body:     nil,
-		Request:  nil,
-		Response: nil,
-		Error:    nil,
+		url:      url,
+		method:   method,
+		head:     nil,
+		body:     nil,
+		request:  nil,
+		response: nil,
+		error:    nil,
 	}
 }
 
+// SetHead 设置头部信息
 func (c *Context) SetHead(heads map[string]string) *Context {
-	c.Head = heads
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	for k, v := range heads {
+		c.head[k] = v
+	}
+
 	return c
 }
 
+// SetBody 设置Body
 func (c *Context) SetBody(body []byte) *Context {
-	c.Body = body
+	if c.body != nil {
+		c.addError(errors.New("重复设置Body"))
+		return c
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.body = body
+
 	return c
 }
 
-func (c *Context) MarshalBody(body interface{}) *Context {
+// SetBodyWithMarshal 反序列化并设置Body
+func (c *Context) SetBodyWithMarshal(body interface{}) *Context {
+	if c.body != nil {
+		c.addError(errors.New("重复设置body"))
+		return c
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	data, err := json.Marshal(body)
 	if err != nil {
 		c.addError(err)
 		return c
 	}
-	c.Body = data
+	c.body = data
+
 	return c
 }
 
+// Do 执行请求
 func (c *Context) Do() *Context {
-	if len(c.Url) == 0 || len(c.Method) == 0 {
+	if len(c.url) == 0 || len(c.method) == 0 {
 		c.addError(errors.New("URl Or Method is not exist"))
 		return c
 	}
-	req, err := http.NewRequest(c.Method, c.Url, bytes.NewReader(c.Body))
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	req, err := http.NewRequest(c.method, c.url, bytes.NewReader(c.body))
 	if err != nil {
 		c.addError(err)
 		return c
 	}
 
-	if len(c.Head) != 0 {
-		for k, v := range c.Head {
+	if len(c.head) != 0 {
+		for k, v := range c.head {
 			req.Header.Add(k, v)
 		}
 	}
-	c.Request = req
+	c.request = req
 
 	client := &http.Client{}
 	re, err := client.Do(req)
@@ -98,26 +136,32 @@ func (c *Context) Do() *Context {
 		return c
 	}
 
-	c.Response = re
+	c.response = re
 
 	return c
 }
 
-func (c *Context) Unmarshal(model interface{}) *Context {
-	body, err := ioutil.ReadAll(c.Response.Body)
+// Unmarshal 解析返回结果
+func (c *Context) Unmarshal(model interface{}) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	body, err := ioutil.ReadAll(c.response.Body)
 	if err != nil {
-		c.addError(err)
-		return c
+		return err
 	}
 	if err = json.Unmarshal(body, model); err != nil {
-		c.addError(err)
-		return c
+		return err
 	}
-	return c
+	return nil
 }
 
-func (c *Context) ByteBody() ([]byte, error) {
-	body, err := ioutil.ReadAll(c.Response.Body)
+// GetByteBody 获取[]byte形式的Body
+func (c *Context) GetByteBody() ([]byte, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	body, err := ioutil.ReadAll(c.response.Body)
 	if err != nil {
 		c.addError(err)
 		return nil, err
@@ -125,18 +169,21 @@ func (c *Context) ByteBody() ([]byte, error) {
 	return body, nil
 }
 
+// Close 关闭请求
 func (c *Context) Close() error {
-	return c.Response.Body.Close()
+	return c.response.Body.Close()
 }
 
 func (c *Context) addError(err error) {
-	if c.Error == nil {
-		c.Error = err
+	if c.error == nil {
+		c.error = err
 	} else if err != nil {
-		c.Error = fmt.Errorf("%v; %w", c.Error, err)
+		c.error = fmt.Errorf("%v; %w", c.error, err)
 	}
 }
 
+// Download 下载文件
+// name 为完整路径，包括欲保存文件名(包括后缀)
 func Download(url string, name string) error {
 	resp, err := http.Get(url)
 	if err != nil {

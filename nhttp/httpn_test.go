@@ -47,7 +47,7 @@ func TestPOST(t *testing.T) {
 			Account:  "12345678910",
 			Password: "123456Abcd",
 		}
-		re := POST(url).MarshalBody(body).Do()
+		re := POST(url).SetBodyWithMarshal(body).Do()
 		defer re.Close()
 		if re.Error != nil {
 			fmt.Println(re.Error)
