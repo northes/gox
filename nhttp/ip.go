@@ -5,6 +5,8 @@ import (
 	"math"
 	"net"
 	"net/http"
+	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -132,4 +134,79 @@ func Long2IP(i uint) (net.IP, error) {
 	ip[3] = byte(i)
 
 	return ip, nil
+}
+
+type IPType string
+
+const (
+	IPNormal IPType = ""
+	IPv4     IPType = "IPv4"
+	IPv6     IPType = "IPv6"
+)
+
+// ValidIPAddress 校验IP版本
+func ValidIPAddress(IP string) IPType {
+	if ValidIPv4Address(IP) {
+		return IPv4
+	}
+	if ValidIPv6Address(IP) {
+		return IPv6
+	}
+	return IPNormal
+}
+
+// ValidIPv4Address 校验是否是IPv4
+func ValidIPv4Address(IP string) bool {
+	strArr := strings.Split(IP, ".")
+	if len(strArr) != 4 {
+		return false
+	}
+	for _, str := range strArr {
+		if num, err := strconv.Atoi(str); err != nil || num > 255 || num < 0 {
+			return false
+		} else if strconv.Itoa(num) != str {
+			return false
+		}
+	}
+	return true
+}
+
+// ValidIPv6Address 校验是否是IPv6
+func ValidIPv6Address(IP string) bool {
+	strArr := strings.Split(IP, ":")
+	if len(strArr) != 8 {
+		return false
+	}
+	re := regexp.MustCompile(`^([0-9]|[a-f]|[A-F])+$`)
+	for _, str := range strArr {
+		if len(str) == 0 || len(str) > 4 {
+			return false
+		}
+		if !re.MatchString(str) {
+			return false
+		}
+	}
+	return true
+}
+
+func (i IPType) Int() int {
+	switch i {
+	case IPv4:
+		return 4
+	case IPv6:
+		return 6
+	default:
+		return 0
+	}
+}
+
+func (i IPType) IntStr() string {
+	switch i {
+	case IPv4:
+		return "4"
+	case IPv6:
+		return "6"
+	default:
+		return "0"
+	}
 }
