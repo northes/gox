@@ -1,13 +1,19 @@
 package nhttp
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-type Demo struct {
+type Name struct {
+	Name string `json:"name"`
+}
+
+type IP struct {
 	Code int64  `json:"code"`
 	Msg  string `json:"msg"`
 	Data Data   `json:"data"`
@@ -29,13 +35,14 @@ type Login struct {
 	Password string `json:"password"`
 }
 
-func TestGET(t *testing.T) {
+func TestDoGET(t *testing.T) {
 	Convey("GET", t, func() {
-		url := "https://apihut.net/ip"
-		resp := new(Demo)
-		fmt.Println(GET(url).Do().Unmarshal(resp).Error)
-		fmt.Printf("%+v", resp)
-		So(resp.Code, ShouldNotBeNil)
+		var ip IP
+		err := GET("https://apihut.net/ip").SetContentType(ApplicationJson).Do().Response().Unmarshal(&ip)
+		So(err, ShouldBeNil)
+		So(ip.Data, ShouldNotBeNil)
+		t.Log(ip.Code)
+		t.Logf("%+v", ip.Data)
 	})
 }
 
@@ -49,9 +56,53 @@ func TestPOST(t *testing.T) {
 		}
 		re := POST(url).SetBodyWithMarshal(body).Do()
 		defer re.Close()
-		if re.Error != nil {
-			fmt.Println(re.Error)
+		if re.Error() != nil {
+			fmt.Println(re.Error())
 		}
 		So(re.Error, ShouldNotBeNil)
 	})
+}
+
+func TestGET(t *testing.T) {
+	url := "127.0.0.1"
+	get := GET(url)
+	Convey("Setter", t, func() {
+		So(func() {
+			Convey("SetHead", func() {
+				get.SetHead(map[string]string{
+					"foo": "bar",
+				})
+			})
+			Convey("SetBody", func() {
+				get.SetBody([]byte("666"))
+			})
+			Convey("FlushBody", func() {
+				err := get.SetBody([]byte("777")).Error()
+				So(err, ShouldNotBeNil)
+			})
+			Convey("SetBodyWithMarshal", func() {
+
+				So(get.FlushBody().SetBodyWithMarshal(&Name{Name: "northes"}).Error(), ShouldBeNil)
+			})
+		}, ShouldNotPanic)
+	})
+	Convey("Getter", t, func() {
+		So(func() {
+			Convey("GetUrl", func() {
+				So(get.GetUrl(), ShouldEqual, url)
+			})
+			Convey("GetMethod", func() {
+				So(get.GetMethod(), ShouldEqual, http.MethodGet)
+			})
+			Convey("GetHead", func() {
+				So(get.Request().GetHead()["foo"], ShouldEqual, "bar")
+			})
+			Convey("GetRequestBody", func() {
+				var body Name
+				json.Unmarshal(get.Request().GetBody(), &body)
+				So(body.Name, ShouldEqual, "northes")
+			})
+		}, ShouldNotPanic)
+	})
+
 }
