@@ -10,19 +10,12 @@ import (
 	"strings"
 )
 
-// HasLocalIPddr 检测 IP 地址字符串是否是内网地址
-// Deprecated: 此为一个错误名称错误拼写的函数，计划在将来移除，请使用 HasLocalIPAddr 函数
-func HasLocalIPddr(ip string) bool {
-	return HasLocalIPAddr(ip)
-}
-
 // HasLocalIPAddr 检测 IP 地址字符串是否是内网地址
 func HasLocalIPAddr(ip string) bool {
 	return HasLocalIP(net.ParseIP(ip))
 }
 
 // HasLocalIP 检测 IP 地址是否是内网地址
-// 通过直接对比ip段范围效率更高，详见：https://github.com/thinkeridea/go-extend/issues/2
 func HasLocalIP(ip net.IP) bool {
 	if ip.IsLoopback() {
 		return true
