@@ -1,4 +1,4 @@
-package nhttp
+package nhttputils
 
 const (
 	Authorization = "Authorization"
