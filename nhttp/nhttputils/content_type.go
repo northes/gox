@@ -52,3 +52,11 @@ func ContentSubType(contentType ContentType) string {
 	}
 	return contentTypeStr[left+1 : right]
 }
+
+func IsAuthorizationBearer(token string) bool {
+	parts := strings.SplitN(token, " ", 2)
+	if len(parts) == 2 && parts[0] == "Bearer" {
+		return true
+	}
+	return false
+}
