@@ -1,6 +1,9 @@
 package nhttputils
 
-import "strings"
+import (
+	"errors"
+	"strings"
+)
 
 type ContentType string
 
@@ -53,10 +56,12 @@ func ContentSubType(contentType ContentType) string {
 	return contentTypeStr[left+1 : right]
 }
 
-func IsAuthorizationBearer(token string) bool {
+var ErrorNotABBearerToken = errors.New("错误的 Bearer Token 格式")
+
+func ParseBearerToken(authorHead string) (token string, err error) {
 	parts := strings.SplitN(token, " ", 2)
-	if len(parts) == 2 && parts[0] == "Bearer" {
-		return true
+	if !(len(parts) == 2 && parts[0] == "Bearer") {
+		return "", ErrorNotABBearerToken
 	}
-	return false
+	return parts[1], nil
 }
