@@ -7,8 +7,6 @@ import (
 	"net/http"
 	"strings"
 	"time"
-
-	"github.com/northes/ntool/nhttp/nhttputils"
 )
 
 type Client struct {
@@ -24,8 +22,6 @@ type response struct {
 	response *http.Response
 }
 
-type Options func(*Client)
-
 func NewClient(url string, opts ...Options) *Client {
 	c := Client{
 		head:    http.Header{},
@@ -37,38 +33,6 @@ func NewClient(url string, opts ...Options) *Client {
 		opt(&c)
 	}
 	return &c
-}
-
-func WithHead(head map[string]string) Options {
-	return func(c *Client) {
-		for k, v := range head {
-			c.head.Add(k, v)
-		}
-	}
-}
-
-func WithAuthorization(token string) Options {
-	return func(c *Client) {
-		c.head.Add(nhttputils.Authorization, token)
-	}
-}
-
-func WithTimeout(t time.Duration) Options {
-	return func(c *Client) {
-		c.timeout = t
-	}
-}
-
-func WithRetry(r int64) Options {
-	return func(c *Client) {
-		c.retry = r
-	}
-}
-
-func WithBody(body interface{}) Options {
-	return func(c *Client) {
-		c.body = body
-	}
 }
 
 func (c *Client) Get() (*response, error) {
@@ -100,7 +64,7 @@ func (r *response) GetResponse() *http.Response {
 }
 
 func (r *response) StatusCodeOK() bool {
-	return r.GetResponse().StatusCode == 200
+	return r.GetResponse().StatusCode == http.StatusOK
 }
 
 func (c *Client) do() (reply *response, err error) {
