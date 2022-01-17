@@ -1,4 +1,4 @@
-module github.com/northes/ntool
+module github.com/northes/gox
 
 go 1.16
 
