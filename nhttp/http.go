@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/northes/ntool/nhttp/nhttputils"
+	"git.northes.co/northes/gox/nhttp/nhttputils"
 )
 
 type Client struct {
