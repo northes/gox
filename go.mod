@@ -1,6 +1,6 @@
 module git.northes.co/northes/gox
 
-go 1.16
+go 1.21
 
 require (
 	github.com/brianvoe/gofakeit/v6 v6.24.0 // indirect
