@@ -1,4 +1,4 @@
-package ngen
+package gox
 
 import (
 	"crypto/rand"
@@ -16,7 +16,7 @@ var rander = rand.Reader
 var Nil UUID
 
 func NewUUID() UUID {
-	return Must(NewRandom())
+	return Must(NewRandomUUID())
 }
 
 // Must 发生异常时触发 panic
@@ -28,12 +28,12 @@ func Must(uuid UUID, err error) UUID {
 	return uuid
 }
 
-func NewRandom() (UUID, error) {
-	return NewRandomFromReader(rander)
+func NewRandomUUID() (UUID, error) {
+	return NewRandomUUIDFromReader(rander)
 }
 
-// NewRandomFromReader `io.ReadFull` 从 `rand.Reader` 精确地读取len(uuid)字节数据填充进uuid
-func NewRandomFromReader(r io.Reader) (UUID, error) {
+// NewRandomUUIDFromReader `io.ReadFull` 从 `rand.Reader` 精确地读取len(uuid)字节数据填充进uuid
+func NewRandomUUIDFromReader(r io.Reader) (UUID, error) {
 	var uuid UUID
 	_, err := io.ReadFull(r, uuid[:])
 	if err != nil {

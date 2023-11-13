@@ -1,8 +1,8 @@
-package ngen
+package gox
 
 import "github.com/bwmarrin/snowflake"
 
-func NewSnow(n int64) (snowflake.ID, error) {
+func NewSnowID(n int64) (snowflake.ID, error) {
 	node, err := snowflake.NewNode(n)
 	if err != nil {
 		return 0, err
@@ -11,12 +11,12 @@ func NewSnow(n int64) (snowflake.ID, error) {
 	return id, nil
 }
 
-func SnowString(n int64) string {
-	id, _ := NewSnow(n)
+func NewSnowIDString(n int64) string {
+	id, _ := NewSnowID(n)
 	return id.String()
 }
 
-func SnowInt64(n int64) int64 {
-	id, _ := NewSnow(n)
+func NewSnowIDInt64(n int64) int64 {
+	id, _ := NewSnowID(n)
 	return id.Int64()
 }

@@ -1,4 +1,4 @@
-package nhttp
+package xhttp
 
 import (
 	"encoding/json"
@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"git.northes.co/northes/gox/nhttp/nhttputils"
+	"git.northes.co/northes/gox/xhttp/xhttputils"
 )
 
 type Client struct {
@@ -49,7 +49,7 @@ func WithHead(head map[string]string) Options {
 
 func WithAuthorization(token string) Options {
 	return func(c *Client) {
-		c.head.Add(nhttputils.Authorization, token)
+		c.head.Add(xhttputils.Authorization, token)
 	}
 }
 

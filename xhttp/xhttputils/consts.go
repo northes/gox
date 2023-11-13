@@ -1,4 +1,4 @@
-package nhttputils
+package xhttputils
 
 const (
 	Authorization = "Authorization"
