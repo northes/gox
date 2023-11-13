@@ -1,4 +1,4 @@
-module git.northes.co/northes/gox
+module github.com/northes/gox
 
 go 1.21
 
