@@ -1,4 +1,4 @@
-package xhttputils
+package httpxutils
 
 import (
 	"errors"
