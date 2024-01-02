@@ -53,8 +53,8 @@ func WithParams(params map[string]string) Option {
 	}
 }
 
-func WithDebug() Option {
+func WithDebug(b bool) Option {
 	return func(c *Client) {
-		c.debug = true
+		c.debug = b
 	}
 }

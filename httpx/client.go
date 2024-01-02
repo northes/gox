@@ -6,9 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/northes/gox"
 )
 
 type Client struct {
@@ -91,22 +94,44 @@ func (c *Client) do() (*Response, error) {
 		return nil, errors.New(fmt.Sprintf("new request: %v", err))
 	}
 
+	if c.debug {
+		log.Printf("Request: \n  URL: %s\n  Body: %s\n  Head: %s",
+			req.URL,
+			gox.JsonMarshalToStringX(req.Body),
+			gox.JsonMarshalToStringX(req.Header),
+		)
+	}
+
 	client := http.Client{
 		Timeout: c.timeout,
 	}
+
+	if c.debug {
+		log.Printf("Client:\n  Timeout: %d", client.Timeout)
+	}
+
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("client Do(): %v", err))
 	}
 
-	return &Response{
+	response := &Response{
 		response: resp,
 		logger:   c.logger,
-	}, nil
+	}
+
+	if c.debug {
+		log.Printf("Response:\n  %s", response.String())
+	}
+
+	return response, nil
 }
 
 func (r *Response) String() string {
 	b := r.response.Body
+	if b == nil {
+		return ""
+	}
 	defer func() {
 		_ = r.response.Body.Close()
 	}()
@@ -115,7 +140,8 @@ func (r *Response) String() string {
 		r.logger.Fatal(err.Error())
 		return ""
 	}
-	return fmt.Sprintf("Status: %s\nBody: %s", r.response.Status, string(body))
+	r.response.Body = io.NopCloser(bytes.NewBuffer(body))
+	return fmt.Sprintf("Status: %s\n  Body: %s", r.response.Status, string(body))
 }
 
 func (r *Response) Unmarshal(body any) error {
