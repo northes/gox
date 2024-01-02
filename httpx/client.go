@@ -1,4 +1,4 @@
-package xhttp
+package httpx
 
 import (
 	"bytes"
@@ -122,7 +122,7 @@ func (r *Response) Unmarshal(body any) error {
 	if !r.IsStatusOK() {
 		return errors.New(fmt.Sprintf("status is %d not %d", r.response.StatusCode, http.StatusOK))
 	}
-	if body == nil || r.Response() == nil {
+	if body == nil || r.RawResponse() == nil {
 		return errors.New(fmt.Sprintf("response is nil or input body id nil"))
 	}
 	b := r.response.Body
@@ -136,7 +136,7 @@ func (r *Response) Unmarshal(body any) error {
 	return json.Unmarshal(bb, body)
 }
 
-func (r *Response) Response() *http.Response {
+func (r *Response) RawResponse() *http.Response {
 	return r.response
 }
 

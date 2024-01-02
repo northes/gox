@@ -1,4 +1,4 @@
-package xhttp
+package httpx
 
 import (
 	"fmt"
@@ -34,9 +34,9 @@ func WithBody(body any) Option {
 	}
 }
 
-func WithPath(path string) Option {
+func WithPaths(path ...string) Option {
 	return func(c *Client) {
-		c.url.Path += path
+		c.url = c.url.JoinPath(path...)
 	}
 }
 

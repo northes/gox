@@ -1,4 +1,4 @@
-package xhttp
+package httpx
 
 type Logger interface {
 	Debug(string)
