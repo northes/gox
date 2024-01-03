@@ -40,6 +40,12 @@ func WithPaths(path ...string) Option {
 	}
 }
 
+func WithRawQuery(rq string) Option {
+	return func(c *Client) {
+		c.url.RawQuery = rq
+	}
+}
+
 func WithParams(params map[string]string) Option {
 	return func(c *Client) {
 		builder := &strings.Builder{}
