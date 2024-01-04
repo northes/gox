@@ -96,7 +96,8 @@ func (c *Client) do() (*Response, error) {
 
 	if c.debug {
 		log.Printf("Request: \n  URL: %s\n  Body: %s\n  Head: %s",
-			req.URL,
+			//req.URL,
+			c.url.String(),
 			gox.JsonMarshalToStringX(req.Body),
 			gox.JsonMarshalToStringX(req.Header),
 		)
@@ -145,9 +146,6 @@ func (r *Response) String() string {
 }
 
 func (r *Response) Unmarshal(body any) error {
-	if !r.IsStatusOK() {
-		return errors.New(fmt.Sprintf("status is %d not %d", r.response.StatusCode, http.StatusOK))
-	}
 	if body == nil || r.RawResponse() == nil {
 		return errors.New(fmt.Sprintf("response is nil or input body id nil"))
 	}
