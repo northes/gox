@@ -156,7 +156,11 @@ func (c *Client) do(ctxs ...context.Context) (*Response, error) {
 		}
 	}
 
-	req, err = http.NewRequest(c.method, c.url.String(), body)
+	if body == nil {
+		req, err = http.NewRequest(c.method, c.url.String(), nil)
+	} else {
+		req, err = http.NewRequest(c.method, c.url.String(), body)
+	}
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("new request: %v", err))
 	}
