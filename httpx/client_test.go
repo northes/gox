@@ -1,17 +1,16 @@
-package httpx
+package httpx_test
 
-import "testing"
+import (
+	"io"
+	"testing"
+
+	"github.com/northes/gox/httpx"
+)
 
 func TestClientGet(t *testing.T) {
-	cli, err := NewClient("https://apihut.co",
-		WithParams(map[string]string{
-			"hello": "hi",
-		}),
-	)
-	if err != nil {
-		t.Fatalf("NewClient: %v", err)
-	}
-	resp, err := cli.Get()
+	resp, err := httpx.NewClient("https://apihut.co").
+		AddParam("hello", "hi").
+		Get()
 	if err != nil {
 		t.Fatalf("Client.Get(): %v", err)
 	}
@@ -24,41 +23,34 @@ func TestClientPostJson(t *testing.T) {
 		Age  int64  `json:"age"`
 	}
 
-	cli, err := NewClient("https://apihut.co", WithBody(
-		&st{
+	resp, err := httpx.NewClient("https://apihut.co/", httpx.WithDebug(true)).
+		SetBody(&st{
 			Name: "northes",
 			Age:  18,
-		},
-	))
+		}).Post()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	r, err := cli.Post()
+	stResp := new(st)
+	err = resp.Unmarshal(stResp)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	resp := new(st)
-
-	err = r.Unmarshal(resp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	t.Logf("%+v", resp)
+	t.Logf("%+v", stResp)
 }
 
 func TestClientPostString(t *testing.T) {
-	cli, err := NewClient("https://apihut.co", WithBody("666"))
+	resp, err := httpx.NewClient("https://apihut.co",
+		httpx.WithDebug(true),
+	).SetBody("666").Post()
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(resp.Raw().Body)
 
-	r, err := cli.Post()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	t.Logf("%v", r)
+	t.Logf("%v", resp.Raw().Body)
 }

@@ -1,5 +1,6 @@
 package httpxutils
 
 const (
-	Authorization = "Authorization"
+	AuthorizationHeaderKey = "Authorization"
+	ContentTypeHeaderKey   = "Content-Type"
 )
