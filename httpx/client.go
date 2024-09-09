@@ -27,9 +27,12 @@ type Client struct {
 	logger      Logger
 	debug       bool
 	error       error
+	jsonEncoder httpxutils.JSONMarshal
+	jsonDecoder httpxutils.JSONUnmarshal
 }
 
 type Response struct {
+	c        *Client
 	response *http.Response
 	logger   Logger
 }
@@ -51,7 +54,19 @@ func NewClient(rawURL string, opts ...Option) *Client {
 	if cli.logger == nil {
 		cli.logger = slog.Default()
 	}
+
+	cli.checkAndFix()
+
 	return cli
+}
+
+func (c *Client) checkAndFix() {
+	if c.jsonEncoder == nil {
+		c.jsonEncoder = json.Marshal
+	}
+	if c.jsonDecoder == nil {
+		c.jsonDecoder = json.Unmarshal
+	}
 }
 
 func (c *Client) SetBody(body any) *Client {
@@ -78,7 +93,7 @@ func (c *Client) AddHeaders(kv map[string]string) *Client {
 
 func (c *Client) AddPath(paths ...string) *Client {
 	c.url = c.url.JoinPath(paths...)
-	//c.url.JoinPath(paths...)
+	// c.url.JoinPath(paths...)
 	return c
 }
 
@@ -147,7 +162,7 @@ func (c *Client) do(ctxs ...context.Context) (*Response, error) {
 			b := c.body.(*bytes.Buffer)
 			body = bytes.NewReader(b.Bytes())
 		default:
-			b, err := json.Marshal(c.body)
+			b, err := c.jsonEncoder(c.body)
 			if err != nil {
 				return nil, errors.New(fmt.Sprintf("body unmarshal(%v): %v", c.body, err))
 			}
@@ -196,6 +211,7 @@ func (c *Client) do(ctxs ...context.Context) (*Response, error) {
 	response := &Response{
 		response: resp,
 		logger:   c.logger,
+		c:        c,
 	}
 
 	if c.debug {
@@ -236,7 +252,7 @@ func (r *Response) Unmarshal(body any) error {
 	if err != nil {
 		return err
 	}
-	return json.Unmarshal(bb, body)
+	return r.c.jsonDecoder(bb, body)
 }
 
 func (r *Response) Raw() *http.Response {
